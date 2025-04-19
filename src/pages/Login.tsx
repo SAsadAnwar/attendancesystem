@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -7,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, ShieldCheck, UserRound } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
 
 export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,6 +26,29 @@ export default function Login() {
   const [fullName, setFullName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("");
+
+  // Quick login function for demo accounts
+  const handleQuickLogin = async (email: string, password: string) => {
+    setIsSubmitting(true);
+    try {
+      const success = await login(email, password);
+      if (!success) {
+        toast({
+          title: "Login Failed",
+          description: "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,6 +174,43 @@ export default function Login() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    <Separator className="my-4" />
+                    <div className="text-sm text-center mb-4 text-slate-600">Quick Login Options</div>
+                    <div className="grid gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleQuickLogin("admin@example.com", "admin123")}
+                        disabled={isSubmitting}
+                      >
+                        <Shield className="mr-2" />
+                        Login as Admin
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleQuickLogin("management@example.com", "mgmt123")}
+                        disabled={isSubmitting}
+                      >
+                        <ShieldCheck className="mr-2" />
+                        Login as Management
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleQuickLogin("john.smith@example.com", "teacher123")}
+                        disabled={isSubmitting}
+                      >
+                        <UserRound className="mr-2" />
+                        Login as Teacher
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
