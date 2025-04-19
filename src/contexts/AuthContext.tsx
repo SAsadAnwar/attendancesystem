@@ -1,7 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { User, UserRole } from "@/types";
-import { users } from "@/data/mockData";
+import { User } from "@/types";
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -23,42 +24,75 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on load
   useEffect(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          setCurrentUser({
+            id: session.user.id,
+            name: session.user.user_metadata.full_name || '',
+            email: session.user.email || '',
+            role: 'student',
+            password: '', // We don't store passwords
+            studentId: session.user.user_metadata.student_id,
+            department: session.user.user_metadata.department,
+          });
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          name: session.user.user_metadata.full_name || '',
+          email: session.user.email || '',
+          role: 'student',
+          password: '', // We don't store passwords
+          studentId: session.user.user_metadata.student_id,
+          department: session.user.user_metadata.department,
+        });
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Login function - in a real app, this would validate against a backend
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      // Store user in localStorage - in a real app, this would be a JWT token
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      setCurrentUser(user);
-      setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem("currentUser");
-    setCurrentUser(null);
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setCurrentUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const value = {
@@ -72,8 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Role-based authorization hook
-export const useAuthorization = (allowedRoles: UserRole[]) => {
+export const useAuthorization = (allowedRoles: User['role'][]) => {
   const { currentUser, isLoggedIn } = useAuth();
   
   if (!isLoggedIn || !currentUser) {
