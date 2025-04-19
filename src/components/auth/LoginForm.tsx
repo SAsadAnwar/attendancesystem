@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { QuickLoginOptions } from "./QuickLoginOptions";
+import { Separator } from "@/components/ui/separator";
 
 interface LoginFormProps {
   email: string;
@@ -25,9 +26,44 @@ export function LoginForm({
   onQuickLogin,
   isSubmitting,
 }: LoginFormProps) {
+  const handleIndividualLogin = (role: string, defaultEmail: string) => {
+    setEmail(defaultEmail);
+    setPassword(role === "admin" ? "admin123" : role === "management" ? "mgmt123" : "teacher123");
+  };
+
   return (
     <form onSubmit={onSubmit}>
       <CardContent className="space-y-4">
+        <div className="grid gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleIndividualLogin("admin", "admin@example.com")}
+            disabled={isSubmitting}
+          >
+            Login as Admin
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleIndividualLogin("management", "management@example.com")}
+            disabled={isSubmitting}
+          >
+            Login as Management
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleIndividualLogin("teacher", "john.smith@example.com")}
+            disabled={isSubmitting}
+          >
+            Login as Teacher
+          </Button>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
