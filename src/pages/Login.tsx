@@ -1,15 +1,13 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Shield, ShieldCheck, UserRound } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Separator } from "@/components/ui/separator";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { SignupForm } from "@/components/auth/SignupForm";
 
 export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +25,6 @@ export default function Login() {
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("");
 
-  // Quick login function for demo accounts
   const handleQuickLogin = async (email: string, password: string) => {
     setIsSubmitting(true);
     try {
@@ -56,7 +53,6 @@ export default function Login() {
 
     try {
       const success = await login(email, password);
-
       if (!success) {
         toast({
           title: "Login Failed",
@@ -151,155 +147,32 @@ export default function Login() {
 
           <Tabs defaultValue="login" className="w-full">
             <TabsContent value="login">
-              <form onSubmit={handleLogin}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-4 pt-4">
-                    <Separator className="my-4" />
-                    <div className="text-sm text-center mb-4 text-slate-600">Quick Login Options</div>
-                    <div className="grid gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleQuickLogin("admin@example.com", "admin123")}
-                        disabled={isSubmitting}
-                      >
-                        <Shield className="mr-2" />
-                        Login as Admin
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleQuickLogin("management@example.com", "mgmt123")}
-                        disabled={isSubmitting}
-                      >
-                        <ShieldCheck className="mr-2" />
-                        Login as Management
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleQuickLogin("john.smith@example.com", "teacher123")}
-                        disabled={isSubmitting}
-                      >
-                        <UserRound className="mr-2" />
-                        Login as Teacher
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-                </CardFooter>
-              </form>
+              <LoginForm
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                onSubmit={handleLogin}
+                onQuickLogin={handleQuickLogin}
+                isSubmitting={isSubmitting}
+              />
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signupEmail">Student Email</Label>
-                    <Input
-                      id="signupEmail"
-                      type="email"
-                      placeholder="Enter your student email"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="studentId">Student ID</Label>
-                    <Input
-                      id="studentId"
-                      type="text"
-                      placeholder="Enter your student ID"
-                      value={studentId}
-                      onChange={(e) => setStudentId(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Input
-                      id="department"
-                      type="text"
-                      placeholder="Enter your department"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signupPassword">Password</Label>
-                    <Input
-                      id="signupPassword"
-                      type="password"
-                      placeholder="Choose a password"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </CardFooter>
-              </form>
+              <SignupForm
+                signupEmail={signupEmail}
+                setSignupEmail={setSignupEmail}
+                signupPassword={signupPassword}
+                setSignupPassword={setSignupPassword}
+                fullName={fullName}
+                setFullName={setFullName}
+                studentId={studentId}
+                setStudentId={setStudentId}
+                department={department}
+                setDepartment={setDepartment}
+                onSubmit={handleSignup}
+                isSubmitting={isSubmitting}
+              />
             </TabsContent>
           </Tabs>
         </Card>
